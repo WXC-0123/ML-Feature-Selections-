@@ -1,0 +1,1141 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Feature selection by Sklearn -- Boston"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "1. Feature selection： Feature selection is to transform the original data into features to better represent the actual problems dealt with by the prediction model and improve the accuracy of unknown data. It uses the domain specific knowledge of the target problem or automatic methods to generate, extract, delete or combine changes to get features.\n",
+    "\n",
+    "2. Why feature selection?\n",
+    "In a nutshell, can the data you gave me be put directly into the model? Obviously not. First, our data could be false (outliers); Second, our data is too noise; Third, we may not have enough data, or the amount of data is unbalanced (data sampling); Forth, can the data be used directly after cleaning? Obviously not! The input data of the model should be related to the output of the model, and it doesn't matter that is noise. (feature extraction or processing); Fourth, the characteristics of the relationship between the relatives, they are a family, can not reflect the problem!"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/xuechunwang/opt/anaconda3/lib/python3.8/site-packages/sklearn/utils/deprecation.py:87: FutureWarning: Function load_boston is deprecated; `load_boston` is deprecated in 1.0 and will be removed in 1.2.\n",
+      "\n",
+      "    The Boston housing prices dataset has an ethical problem. You can refer to\n",
+      "    the documentation of this function for further details.\n",
+      "\n",
+      "    The scikit-learn maintainers therefore strongly discourage the use of this\n",
+      "    dataset unless the purpose of the code is to study and educate about\n",
+      "    ethical issues in data science and machine learning.\n",
+      "\n",
+      "    In this special case, you can fetch the dataset from the original\n",
+      "    source::\n",
+      "\n",
+      "        import pandas as pd\n",
+      "        import numpy as np\n",
+      "\n",
+      "\n",
+      "        data_url = \"http://lib.stat.cmu.edu/datasets/boston\"\n",
+      "        raw_df = pd.read_csv(data_url, sep=\"\\s+\", skiprows=22, header=None)\n",
+      "        data = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])\n",
+      "        target = raw_df.values[1::2, 2]\n",
+      "\n",
+      "    Alternative datasets include the California housing dataset (i.e.\n",
+      "    :func:`~sklearn.datasets.fetch_california_housing`) and the Ames housing\n",
+      "    dataset. You can load the datasets as follows::\n",
+      "\n",
+      "        from sklearn.datasets import fetch_california_housing\n",
+      "        housing = fetch_california_housing()\n",
+      "\n",
+      "    for the California housing dataset and::\n",
+      "\n",
+      "        from sklearn.datasets import fetch_openml\n",
+      "        housing = fetch_openml(name=\"house_prices\", as_frame=True)\n",
+      "\n",
+      "    for the Ames housing dataset.\n",
+      "    \n",
+      "  warnings.warn(msg, category=FutureWarning)\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>CRIM</th>\n",
+       "      <th>ZN</th>\n",
+       "      <th>INDUS</th>\n",
+       "      <th>CHAS</th>\n",
+       "      <th>NOX</th>\n",
+       "      <th>RM</th>\n",
+       "      <th>AGE</th>\n",
+       "      <th>DIS</th>\n",
+       "      <th>RAD</th>\n",
+       "      <th>TAX</th>\n",
+       "      <th>PTRATIO</th>\n",
+       "      <th>B</th>\n",
+       "      <th>LSTAT</th>\n",
+       "      <th>PRICE</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0.00632</td>\n",
+       "      <td>18.0</td>\n",
+       "      <td>2.31</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.538</td>\n",
+       "      <td>6.575</td>\n",
+       "      <td>65.2</td>\n",
+       "      <td>4.0900</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>296.0</td>\n",
+       "      <td>15.3</td>\n",
+       "      <td>396.90</td>\n",
+       "      <td>4.98</td>\n",
+       "      <td>24.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>0.02731</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>7.07</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.469</td>\n",
+       "      <td>6.421</td>\n",
+       "      <td>78.9</td>\n",
+       "      <td>4.9671</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>242.0</td>\n",
+       "      <td>17.8</td>\n",
+       "      <td>396.90</td>\n",
+       "      <td>9.14</td>\n",
+       "      <td>21.6</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>0.02729</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>7.07</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.469</td>\n",
+       "      <td>7.185</td>\n",
+       "      <td>61.1</td>\n",
+       "      <td>4.9671</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>242.0</td>\n",
+       "      <td>17.8</td>\n",
+       "      <td>392.83</td>\n",
+       "      <td>4.03</td>\n",
+       "      <td>34.7</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>0.03237</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>2.18</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.458</td>\n",
+       "      <td>6.998</td>\n",
+       "      <td>45.8</td>\n",
+       "      <td>6.0622</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>222.0</td>\n",
+       "      <td>18.7</td>\n",
+       "      <td>394.63</td>\n",
+       "      <td>2.94</td>\n",
+       "      <td>33.4</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>0.06905</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>2.18</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.458</td>\n",
+       "      <td>7.147</td>\n",
+       "      <td>54.2</td>\n",
+       "      <td>6.0622</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>222.0</td>\n",
+       "      <td>18.7</td>\n",
+       "      <td>396.90</td>\n",
+       "      <td>5.33</td>\n",
+       "      <td>36.2</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "      CRIM    ZN  INDUS  CHAS    NOX     RM   AGE     DIS  RAD    TAX  \\\n",
+       "0  0.00632  18.0   2.31   0.0  0.538  6.575  65.2  4.0900  1.0  296.0   \n",
+       "1  0.02731   0.0   7.07   0.0  0.469  6.421  78.9  4.9671  2.0  242.0   \n",
+       "2  0.02729   0.0   7.07   0.0  0.469  7.185  61.1  4.9671  2.0  242.0   \n",
+       "3  0.03237   0.0   2.18   0.0  0.458  6.998  45.8  6.0622  3.0  222.0   \n",
+       "4  0.06905   0.0   2.18   0.0  0.458  7.147  54.2  6.0622  3.0  222.0   \n",
+       "\n",
+       "   PTRATIO       B  LSTAT  PRICE  \n",
+       "0     15.3  396.90   4.98   24.0  \n",
+       "1     17.8  396.90   9.14   21.6  \n",
+       "2     17.8  392.83   4.03   34.7  \n",
+       "3     18.7  394.63   2.94   33.4  \n",
+       "4     18.7  396.90   5.33   36.2  "
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from sklearn import datasets\n",
+    "\n",
+    "b = datasets.load_boston() \n",
+    "\n",
+    "bos = pd.DataFrame(b.data)\n",
+    "bos.columns = b.feature_names\n",
+    "X = bos[bos.columns]\n",
+    "bos[\"PRICE\"] = b.target\n",
+    "y = bos[\"PRICE\"]\n",
+    "\n",
+    "bos.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 1. Filter : Remove features with low variance\n",
+    "\n",
+    "This should be the simplest feature selection method: assume that a feature has only 0 and 1 eigenvalues, and that 95 percent of the instances in all input samples have 1 eigenvalues, then the feature is considered unimportant. If 100% of them are 1's, then this feature is meaningless. This method can only be used when the eigenvalues are all discrete variables. If they are continuous variables, the continuous variables need to be discretized before they can be used. Moreover, in practice, more than 95% of the features take a certain value, so this method is simple but not easy to use. It can be used as a pre-processing of feature selection, first removing those features with small value changes, and then selecting appropriate features from the feature selection methods mentioned next for further feature selection."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "CRIM          73.986578\n",
+      "ZN           543.936814\n",
+      "INDUS         47.064442\n",
+      "CHAS           0.064513\n",
+      "NOX            0.013428\n",
+      "RM             0.493671\n",
+      "AGE          792.358399\n",
+      "DIS            4.434015\n",
+      "RAD           75.816366\n",
+      "TAX        28404.759488\n",
+      "PTRATIO        4.686989\n",
+      "B           8334.752263\n",
+      "LSTAT         50.994760\n",
+      "dtype: float64\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.feature_selection import VarianceThreshold\n",
+    "sel = VarianceThreshold(threshold=(.8 * (1 - .8)))\n",
+    "sel.fit_transform(X)\n",
+    "print(X.var())"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "the threshold is 0.16, we can see from this result, feature CHAS and feature NOX's var results are lower than 0.16. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "### 2. Univariate feature selection\n",
+    "\n",
+    "Univariate feature selection can test each feature, measure the relationship between the feature and the response variable, and discard the bad feature according to the score. For regression and classification problems, chi-square test and other methods can be used to test the characteristics.\n",
+    "\n",
+    "This method is relatively simple, easy to run, easy to understand, usually for understanding data has a good effect (but not necessarily effective for feature optimization, improve generalization ability); There are many improved versions and variations of this method.\n",
+    "\n",
+    "These objects take as input a scoring function that returns univariate scores and p-values (or only scores for SelectKBest and SelectPercentile):\n",
+    "\n",
+    "- For regression: f_regression, mutual_info_regression\n",
+    "\n",
+    "- For classification: chi2, f_classif, mutual_info_classif"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(253, 39)\n",
+      "(253, 19)\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.datasets import load_breast_cancer\n",
+    "from sklearn.feature_selection import SelectPercentile\n",
+    "from sklearn.model_selection import train_test_split\n",
+    "\n",
+    "# get deterministic random numbers\n",
+    "rng = np.random.RandomState(42)\n",
+    "noise = rng.normal(size=(len(bos), 26))\n",
+    "# add noise features to the data\n",
+    "# the first 13 features are from the dataset, the next 26 are noise\n",
+    "X_w_noise = np.hstack([X, noise])\n",
+    "\n",
+    "X_train, X_test, y_train, y_test = train_test_split(X_w_noise, y, random_state=0, test_size=.5)\n",
+    "# use f_classif (the default) and SelectPercentile to select 10% of features:\n",
+    "select = SelectPercentile(percentile=50)\n",
+    "select.fit(X_train, y_train)\n",
+    "# transform training set:\n",
+    "X_train_selected = select.transform(X_train)\n",
+    "\n",
+    "print(X_train.shape)\n",
+    "print(X_train_selected.shape)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "[<matplotlib.lines.Line2D at 0x7fb8d0a83b50>]"
+      ]
+     },
+     "execution_count": 4,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "from sklearn.feature_selection import f_classif, f_regression, chi2\n",
+    "import matplotlib.pyplot as plt\n",
+    "F, p = f_classif(X_train, y_train)\n",
+    "plt.figure()\n",
+    "plt.semilogy(p, 'o')"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[ True  True  True False  True  True  True  True  True  True  True  True\n",
+      "  True False  True False False False  True  True False False False  True\n",
+      "  True False False  True False False False  True False False False False\n",
+      " False False False]\n"
+     ]
+    },
+    {
+     "data": {
+      "text/plain": [
+       "<matplotlib.image.AxesImage at 0x7fb8f0810dc0>"
+      ]
+     },
+     "execution_count": 5,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 1152x144 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "mask = select.get_support()\n",
+    "print(mask)\n",
+    "# visualize the mask. black is True, white is False\n",
+    "plt.matshow(mask.reshape(1, -1), cmap='gray_r')"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- the feature we will select: CRIM, ZN, INDUS, NOX, RM, AGE, DIS, RAD, TAX, PTRATIO.\n",
+    "- feature CHAX droped. "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Score with all features: 0.625674\n",
+      "Score with only selected features: 0.663097\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.linear_model import LinearRegression\n",
+    "\n",
+    "# transform test data:\n",
+    "X_test_selected = select.transform(X_test)\n",
+    "\n",
+    "lr = LinearRegression()\n",
+    "lr.fit(X_train, y_train)\n",
+    "print(\"Score with all features: %f\" % lr.score(X_test, y_test))\n",
+    "lr.fit(X_train_selected, y_train)\n",
+    "print(\"Score with only selected features: %f\" % lr.score(X_test_selected, y_test))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "let's compare score with all features and score with only selected features, the score with only selected features is higher than score with all features. It means after adding noise, the model became better."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### 2.1 Pearson Correlation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- Pearson correlation coefficient is the simplest method to help understand the relationship between characteristics and response variables. It measures the linear correlation between variables. The value range of the results is [-1, 1], -1 means a complete negative correlation, +1 means a complete positive correlation, and 0 means no linear correlation.\n",
+    "\n",
+    "- Pearson Correlation is fast and easy to calculate, and is often performed as soon as the data is received (after cleaning and feature extraction). Scipy's Pearsonr method can calculate correlation coefficient and p-value at the same time.\n",
+    "\n",
+    "- An obvious defect of Pearson's correlation coefficient is that it is only sensitive to linear relationships as a feature ordering mechanism. If the relationship is nonlinear, the Pearson correlation may approach 0 even if the two variables have a one-to-one correspondence."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Lower noise (0.7182483686213841, 7.324017312998504e-49)\n",
+      "Higher noise (0.05796429207933815, 0.31700993885325246)\n"
+     ]
+    }
+   ],
+   "source": [
+    "import numpy as np\n",
+    "from scipy.stats import pearsonr\n",
+    "np.random.seed(0)\n",
+    "size = 300\n",
+    "x = np.random.normal(0, 1, size)\n",
+    "print(\"Lower noise\", pearsonr(x, x + np.random.normal(0, 1, size)))\n",
+    "print(\"Higher noise\", pearsonr(x, x + np.random.normal(0, 10, size)))"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### 2.2 Distance correlation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- The distance correlation coefficient is designed to overcome the weakness of Pearson correlation coefficient. In the case of x and x^2, even if Pearson correlation coefficient is 0, we cannot conclude that these two variables are independent (possibly non-linear correlation). But if the distance correlation coefficient is 0, then we can say that these two variables are independent.\n",
+    "\n",
+    "- Despite MIC and distance correlation coefficient, Pearson correlation coefficient is still irreplaceable when the relationship between variables is close to linear correlation. First, Pearson correlation coefficient calculation speed is fast, which is very important when processing large-scale data. Second, the value range of Pearson's correlation coefficient is [-1, 1], while MIC and distance correlation coefficient are [0,1]. This feature enables Pearson correlation coefficient to represent a richer relationship, with the sign representing the positive and negative of the relationship and the absolute value representing the intensity. Of course, Pearson correlation is valid on the premise that the variation relationship between the two variables is monotonous."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### 2.3 Model Based Ranking"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "- The idea is to directly use the machine learning algorithm you want to use to build a prediction model for each individual feature and response variable. In fact, Pearson correlation coefficient is equivalent to the standardized regression coefficient in linear regression. If the relationship between a feature and the response variable is nonlinear, tree-based approaches (decision trees, random forests), or extended linear models can be used. Tree-based approaches are easier to use because they model nonlinear relationships better and do not require much debugging. But pay attention to the fitting problem, so the depth of the tree had better not be too large, and then the use of cross validation."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/xuechunwang/opt/anaconda3/lib/python3.8/site-packages/sklearn/utils/deprecation.py:87: FutureWarning: Function load_boston is deprecated; `load_boston` is deprecated in 1.0 and will be removed in 1.2.\n",
+      "\n",
+      "    The Boston housing prices dataset has an ethical problem. You can refer to\n",
+      "    the documentation of this function for further details.\n",
+      "\n",
+      "    The scikit-learn maintainers therefore strongly discourage the use of this\n",
+      "    dataset unless the purpose of the code is to study and educate about\n",
+      "    ethical issues in data science and machine learning.\n",
+      "\n",
+      "    In this special case, you can fetch the dataset from the original\n",
+      "    source::\n",
+      "\n",
+      "        import pandas as pd\n",
+      "        import numpy as np\n",
+      "\n",
+      "\n",
+      "        data_url = \"http://lib.stat.cmu.edu/datasets/boston\"\n",
+      "        raw_df = pd.read_csv(data_url, sep=\"\\s+\", skiprows=22, header=None)\n",
+      "        data = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])\n",
+      "        target = raw_df.values[1::2, 2]\n",
+      "\n",
+      "    Alternative datasets include the California housing dataset (i.e.\n",
+      "    :func:`~sklearn.datasets.fetch_california_housing`) and the Ames housing\n",
+      "    dataset. You can load the datasets as follows::\n",
+      "\n",
+      "        from sklearn.datasets import fetch_california_housing\n",
+      "        housing = fetch_california_housing()\n",
+      "\n",
+      "    for the California housing dataset and::\n",
+      "\n",
+      "        from sklearn.datasets import fetch_openml\n",
+      "        housing = fetch_openml(name=\"house_prices\", as_frame=True)\n",
+      "\n",
+      "    for the Ames housing dataset.\n",
+      "    \n",
+      "  warnings.warn(msg, category=FutureWarning)\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from sklearn import datasets\n",
+    "\n",
+    "b = datasets.load_boston() \n",
+    "\n",
+    "bos = pd.DataFrame(b.data)\n",
+    "bos.columns = b.feature_names\n",
+    "X = bos[bos.columns]\n",
+    "bos[\"PRICE\"] = b.target\n",
+    "y = bos[\"PRICE\"]\n",
+    "\n",
+    "from sklearn.feature_selection import SelectFromModel\n",
+    "from sklearn.ensemble import RandomForestRegressor\n",
+    "select = SelectFromModel(RandomForestRegressor(random_state=42),\n",
+    "                         threshold=\"median\")"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(354, 13)\n",
+      "(354, 7)\n"
+     ]
+    }
+   ],
+   "source": [
+    "X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=.3)\n",
+    "\n",
+    "select.fit(X_train, y_train)\n",
+    "X_train_rf = select.transform(X_train)\n",
+    "print(X_train.shape)\n",
+    "print(X_train_rf.shape)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([ True, False, False, False,  True,  True, False,  True, False,\n",
+       "        True,  True, False,  True])"
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    },
+    {
+     "data": {
+      "image/png": "iVBORw0KGgoAAAANSUhEUgAAA6oAAABnCAYAAAAJ4r/pAAAAOXRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjMuMiwgaHR0cHM6Ly9tYXRwbG90bGliLm9yZy8vihELAAAACXBIWXMAAAsTAAALEwEAmpwYAAAMyUlEQVR4nO3df6hk5X3H8fenu5E0SYOaqll3N9XCkmYJpkYrtob+UmF3I66FFrRJurSBRYipKYFkrdB/CiWlJdhSG7kY65ZIJKipi5gaswm0kBpcTTHZbtXFtHrj1t00bRKaP+zGb/+YY3rvnZmd687oee7s+wWXO+ecZ87zZc73OXO/85wzN1WFJEmSJEmt+Im+A5AkSZIkaSkLVUmSJElSUyxUJUmSJElNsVCVJEmSJDXFQlWSJEmS1BQLVUmSJElSUyxUTyDJtiRPJjmcZE/f8ag9STYn+UqSQ0kOJrmx75jUpiTrknw9yQN9x6I2JTk9yT1J/rU7p/xi3zGpLUn+oHuv+WaSzyZ5fd8xqV9J7khyNMk3l6w7M8nDSZ7ufp/RZ4zq35g8+bPu/eaJJJ9PcnqPIY5koTpGknXArcB2YCtwXZKt/UalBh0HPlpV7wAuBT5knmiMG4FDfQehpv0F8PdV9XPAuzBftESSjcDvAxdX1TuBdcC1/UalBtwJbFuxbg+wv6q2APu7ZZ3a7mQ4Tx4G3llVFwBPATe91kFNYqE63iXA4ap6pqpeBO4GdvYckxpTVUeq6vHu8Q8Y/GG5sd+o1Jokm4D3Arf3HYvalOTNwC8Dnwaoqher6r97DUotWg/8ZJL1wBuA53uORz2rqn8Avrti9U5gb/d4L3DNaxmT2jMqT6rqi1V1vFt8BNj0mgc2gYXqeBuB55YsL2IBohNIch5wIfC1nkNRe24BPga81HMcatfPAseAv+kuEb89yRv7DkrtqKpvA38OPAscAb5XVV/sNyo16pyqOgKDD9SBs3uOR+37PeALfQexkoXqeBmxrl7zKLQmJHkTcC/wkar6ft/xqB1JrgKOVtVjfceipq0H3g18qqouBP4HL9fTEt19hjuB84FzgTcmeX+/UUla65LczOBWtrv6jmUlC9XxFoHNS5Y34SU2GiHJ6xgUqXdV1X19x6PmXAZcneTfGNxC8OtJPtNvSGrQIrBYVS9fkXEPg8JVetkVwLeq6lhV/S9wH/BLPcekNr2QZANA9/toz/GoUUl2AVcB76uq5ibkLFTHexTYkuT8JKcx+MKCfT3HpMYkCYN7yg5V1Sf7jkftqaqbqmpTVZ3H4Dzy5apyFkTLVNV/AM8leXu36nLgX3oMSe15Frg0yRu6957L8Qu3NNo+YFf3eBdwf4+xqFFJtgEfB66uqh/2Hc8oFqpjdDcX3wA8xOCN4HNVdbDfqNSgy4APMJgl++fuZ0ffQUlakz4M3JXkCeDngT/pNxy1pJttvwd4HPgGg7/hFnoNSr1L8lngn4C3J1lM8kHgE8CVSZ4GruyWdQobkyd/BfwU8HD39+ttvQY5Qhqc5ZUkSZIkncKcUZUkSZIkNcVCVZIkSZLUFAtVSZIkSVJTLFQlSZIkSU2xUJUkSZIkNcVCdRWS7O47BrXNHNFqmCeaxBzRJOaIVsM80SRrIUcsVFen+QOp3pkjWg3zRJOYI5rEHNFqmCeapPkcsVCVJEmSJDUlVdV3DGMlaTe4Hlx00UV9h6Axjh07xllnndV3GBrjscce6zsENa6V82tL5xLHzXLmyDBzRJO0Mm5a4rgZVlUZtd5CdQ1p+VhJLUtGnv+kH/P8Osxxs5w5Mswc0SSOm2GOm2HjClUv/ZUkSZIkNWWqQjXJmUkeTvJ09/uME7Rdl+TrSR6Ypk9JkiRJ0nybdkZ1D7C/qrYA+7vlcW4EDk3ZnyRJkiRpzk1bqO4E9naP9wLXjGqUZBPwXuD2KfuTJEmSJM25aQvVc6rqCED3++wx7W4BPga8NGmHSXYnOZDkwJSxSZIkSZLWoPWTGiT5EvDWEZtuXk0HSa4CjlbVY0l+dVL7qloAFrrn+lVhkiRJknSKmVioVtUV47YleSHJhqo6kmQDcHREs8uAq5PsAF4PvDnJZ6rq/ScdtSRJkiRpbk176e8+YFf3eBdw/8oGVXVTVW2qqvOAa4EvW6RKkiRJksaZtlD9BHBlkqeBK7tlkpyb5MFpg5MkSZIknXpS1e5toN6julzLx0pqWZK+Q1DjPL8Oc9wsZ44MM0c0ieNmmONmWFWNfFGmnVGVJEmSJGmmLFQlSZIkSU2xUJUkSZIkNcVCVZIkSZLUFAtVSZIkSVJTpipUk5yZ5OEkT3e/zxjRZnOSryQ5lORgkhun6VOSJEmSNN+mnVHdA+yvqi3A/m55pePAR6vqHcClwIeSbJ2yX0mSJEnSnJq2UN0J7O0e7wWuWdmgqo5U1ePd4x8Ah4CNU/YrSZIkSZpT66d8/jlVdQQGBWmSs0/UOMl5wIXA107QZjewe8q4JEmSJElr1MRCNcmXgLeO2HTzK+koyZuAe4GPVNX3x7WrqgVgoXtOvZI+JEmSJElr38RCtaquGLctyQtJNnSzqRuAo2PavY5BkXpXVd130tFKkiRJkubetPeo7gN2dY93AfevbJAkwKeBQ1X1ySn7kyRJkiTNuVSd/NW1Sd4CfA54G/As8FtV9d0k5wK3V9WOJO8B/hH4BvBS99Q/rKoHV7F/L/1dYppjJZ3KBp+XSeN5fh3muFnOHBlmjmgSx80wx82wqhr5okxVqL7aLFSXa/lYSS3zTUGTeH4d5rhZzhwZZo5oEsfNMMfNsHGF6rSX/kqSJEmSNFMWqpIkSZKkplioSpIkSZKaYqEqSZIkSWqKhaokSZIkqSkzKVSTbEvyZJLDSfaM2J4kf9ltfyLJu2fRryRJkiRp/kxdqCZZB9wKbAe2Atcl2bqi2XZgS/ezG/jUtP1KkiRJkubTLGZULwEOV9UzVfUicDewc0WbncDf1sAjwOlJNsygb0mSJEnSnJlFoboReG7J8mK37pW2ASDJ7iQHkhyYQWySJEmSpDVm/Qz2kRHr6iTaDFZWLQALAElGtpEkSZIkza9ZzKguApuXLG8Cnj+JNpIkSZIkzaRQfRTYkuT8JKcB1wL7VrTZB/xO9+2/lwLfq6ojM+hbkiRJkjRnpr70t6qOJ7kBeAhYB9xRVQeTXN9tvw14ENgBHAZ+CPzutP1KkiRJkuZTqtq9DdR7VJdr+VhJLUtG3SYv/T/Pr8McN8uZI8PMEU3iuBnmuBlWVSNflFlc+itJkiRJ0sxYqEqSJEmSmmKhKkmSJElqioWqJEmSJKkpMylUk2xL8mSSw0n2jNj+viRPdD9fTfKuWfQrSZIkSZo/UxeqSdYBtwLbga3AdUm2rmj2LeBXquoC4I+BhWn7lSRJkiTNp1nMqF4CHK6qZ6rqReBuYOfSBlX11ar6r27xEWDTDPqVJEmSJM2hWRSqG4HnliwvduvG+SDwhRn0K0mSJEmaQ+tnsI9R/6B15H/3TfJrDArV94zdWbIb2D2DuCRJkiRJa9AsCtVFYPOS5U3A8ysbJbkAuB3YXlX/OW5nVbVAdw9rkpEFryRJkiRpfs3i0t9HgS1Jzk9yGnAtsG9pgyRvA+4DPlBVT82gT0mSJEnSnJp6RrWqjie5AXgIWAfcUVUHk1zfbb8N+CPgLcBfJwE4XlUXT9u3JEmSJGn+pKrdq2u99He5lo+V1LLuAzJpLM+vwxw3y5kjw8wRTeK4Gea4GVZVI1+UWVz6K0mSJEnSzFioSpIkSZKaYqEqSZIkSWqKhaokSZIkqSkWqpIkSZKkpsykUE2yLcmTSQ4n2XOCdr+Q5EdJfnMW/UqSJEmS5s/UhWqSdcCtwHZgK3Bdkq1j2v0pg/+3KkmSJEnSSLOYUb0EOFxVz1TVi8DdwM4R7T4M3AscnUGfkiRJkqQ5NYtCdSPw3JLlxW7djyXZCPwGcNuknSXZneRAkgMziE2SJEmStMasn8E+MmJdrVi+Bfh4Vf0oGdV8yROrFoAFgCQr9yNJkiRJmnOzKFQXgc1LljcBz69oczFwd1ek/jSwI8nxqvq7GfQvSZIkSZojqZpu0jLJeuAp4HLg28CjwG9X1cEx7e8EHqiqe1axb2dUl5j2WEmnqklXckieX4c5bpYzR4aZI5rEcTPMcTOsqka+KFPPqFbV8SQ3MPg233XAHVV1MMn13faJ96VKkiRJkvSyqWdUX03OqC7X8rGSWuanl5rE8+swx81y5sgwc0STOG6GOW6GjZtRncW3/kqSJEmSNDOz+DKlV9N3gH/vOwgGXwD1nb6D8BOYpjWRI2qeedKohs6v5kijzBGtMU3kSUPjRsOayBHgZ8ZtaPrS31YkOVBVF/cdh9pljmg1zBNNYo5oEnNEq2GeaJK1kCNe+itJkiRJaoqFqiRJkiSpKRaqq7PQdwBqnjmi1TBPNIk5oknMEa2GeaJJms8R71GVJEmSJDXFGVVJkiRJUlMsVCVJkiRJTbFQlSRJkiQ1xUJVkiRJktQUC1VJkiRJUlP+D7aNaNtjjoFyAAAAAElFTkSuQmCC\n",
+      "text/plain": [
+       "<Figure size 1152x144 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "mask = select.get_support()\n",
+    "# visualize the mask. black is True, white is False\n",
+    "plt.matshow(mask.reshape(1, -1), cmap='gray_r')\n",
+    "mask"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "let's check the result, after print mask, \"Ture\" feature will be selected, and False feature will be droped. So, the feature selection based on \"model based ranking\" method, we will choose feature：CRIM, NOX, RM, DIS, PTRATIO, LSTAT."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "0.6292240047613329"
+      ]
+     },
+     "execution_count": 11,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "X_test_rf = select.transform(X_test)\n",
+    "LinearRegression().fit(X_train_rf, y_train).score(X_test_rf, y_test)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[[1.62864e+00 6.24000e-01 5.01900e+00 ... 4.37000e+02 2.12000e+01\n",
+      "  3.44100e+01]\n",
+      " [1.14600e-01 4.64000e-01 6.53800e+00 ... 2.23000e+02 1.86000e+01\n",
+      "  7.73000e+00]\n",
+      " [5.57780e-01 6.24000e-01 6.33500e+00 ... 4.37000e+02 2.12000e+01\n",
+      "  1.69600e+01]\n",
+      " ...\n",
+      " [1.50980e-01 5.47000e-01 6.02100e+00 ... 4.32000e+02 1.78000e+01\n",
+      "  1.03000e+01]\n",
+      " [2.29270e-01 4.48000e-01 6.03000e+00 ... 2.33000e+02 1.79000e+01\n",
+      "  1.88000e+01]\n",
+      " [1.39140e-01 5.10000e-01 5.57200e+00 ... 2.96000e+02 1.66000e+01\n",
+      "  1.46900e+01]]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(X_train_rf)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "#### 2.4 Sequential Feature Selection "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stderr",
+     "output_type": "stream",
+     "text": [
+      "/Users/xuechunwang/opt/anaconda3/lib/python3.8/site-packages/sklearn/utils/deprecation.py:87: FutureWarning: Function load_boston is deprecated; `load_boston` is deprecated in 1.0 and will be removed in 1.2.\n",
+      "\n",
+      "    The Boston housing prices dataset has an ethical problem. You can refer to\n",
+      "    the documentation of this function for further details.\n",
+      "\n",
+      "    The scikit-learn maintainers therefore strongly discourage the use of this\n",
+      "    dataset unless the purpose of the code is to study and educate about\n",
+      "    ethical issues in data science and machine learning.\n",
+      "\n",
+      "    In this special case, you can fetch the dataset from the original\n",
+      "    source::\n",
+      "\n",
+      "        import pandas as pd\n",
+      "        import numpy as np\n",
+      "\n",
+      "\n",
+      "        data_url = \"http://lib.stat.cmu.edu/datasets/boston\"\n",
+      "        raw_df = pd.read_csv(data_url, sep=\"\\s+\", skiprows=22, header=None)\n",
+      "        data = np.hstack([raw_df.values[::2, :], raw_df.values[1::2, :2]])\n",
+      "        target = raw_df.values[1::2, 2]\n",
+      "\n",
+      "    Alternative datasets include the California housing dataset (i.e.\n",
+      "    :func:`~sklearn.datasets.fetch_california_housing`) and the Ames housing\n",
+      "    dataset. You can load the datasets as follows::\n",
+      "\n",
+      "        from sklearn.datasets import fetch_california_housing\n",
+      "        housing = fetch_california_housing()\n",
+      "\n",
+      "    for the California housing dataset and::\n",
+      "\n",
+      "        from sklearn.datasets import fetch_openml\n",
+      "        housing = fetch_openml(name=\"house_prices\", as_frame=True)\n",
+      "\n",
+      "    for the Ames housing dataset.\n",
+      "    \n",
+      "  warnings.warn(msg, category=FutureWarning)\n"
+     ]
+    },
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>CRIM</th>\n",
+       "      <th>ZN</th>\n",
+       "      <th>INDUS</th>\n",
+       "      <th>CHAS</th>\n",
+       "      <th>NOX</th>\n",
+       "      <th>RM</th>\n",
+       "      <th>AGE</th>\n",
+       "      <th>DIS</th>\n",
+       "      <th>RAD</th>\n",
+       "      <th>TAX</th>\n",
+       "      <th>PTRATIO</th>\n",
+       "      <th>B</th>\n",
+       "      <th>LSTAT</th>\n",
+       "      <th>PRICE</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>0.00632</td>\n",
+       "      <td>18.0</td>\n",
+       "      <td>2.31</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.538</td>\n",
+       "      <td>6.575</td>\n",
+       "      <td>65.2</td>\n",
+       "      <td>4.0900</td>\n",
+       "      <td>1.0</td>\n",
+       "      <td>296.0</td>\n",
+       "      <td>15.3</td>\n",
+       "      <td>396.90</td>\n",
+       "      <td>4.98</td>\n",
+       "      <td>24.0</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>0.02731</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>7.07</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.469</td>\n",
+       "      <td>6.421</td>\n",
+       "      <td>78.9</td>\n",
+       "      <td>4.9671</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>242.0</td>\n",
+       "      <td>17.8</td>\n",
+       "      <td>396.90</td>\n",
+       "      <td>9.14</td>\n",
+       "      <td>21.6</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>2</th>\n",
+       "      <td>0.02729</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>7.07</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.469</td>\n",
+       "      <td>7.185</td>\n",
+       "      <td>61.1</td>\n",
+       "      <td>4.9671</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>242.0</td>\n",
+       "      <td>17.8</td>\n",
+       "      <td>392.83</td>\n",
+       "      <td>4.03</td>\n",
+       "      <td>34.7</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>3</th>\n",
+       "      <td>0.03237</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>2.18</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.458</td>\n",
+       "      <td>6.998</td>\n",
+       "      <td>45.8</td>\n",
+       "      <td>6.0622</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>222.0</td>\n",
+       "      <td>18.7</td>\n",
+       "      <td>394.63</td>\n",
+       "      <td>2.94</td>\n",
+       "      <td>33.4</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>4</th>\n",
+       "      <td>0.06905</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>2.18</td>\n",
+       "      <td>0.0</td>\n",
+       "      <td>0.458</td>\n",
+       "      <td>7.147</td>\n",
+       "      <td>54.2</td>\n",
+       "      <td>6.0622</td>\n",
+       "      <td>3.0</td>\n",
+       "      <td>222.0</td>\n",
+       "      <td>18.7</td>\n",
+       "      <td>396.90</td>\n",
+       "      <td>5.33</td>\n",
+       "      <td>36.2</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "      CRIM    ZN  INDUS  CHAS    NOX     RM   AGE     DIS  RAD    TAX  \\\n",
+       "0  0.00632  18.0   2.31   0.0  0.538  6.575  65.2  4.0900  1.0  296.0   \n",
+       "1  0.02731   0.0   7.07   0.0  0.469  6.421  78.9  4.9671  2.0  242.0   \n",
+       "2  0.02729   0.0   7.07   0.0  0.469  7.185  61.1  4.9671  2.0  242.0   \n",
+       "3  0.03237   0.0   2.18   0.0  0.458  6.998  45.8  6.0622  3.0  222.0   \n",
+       "4  0.06905   0.0   2.18   0.0  0.458  7.147  54.2  6.0622  3.0  222.0   \n",
+       "\n",
+       "   PTRATIO       B  LSTAT  PRICE  \n",
+       "0     15.3  396.90   4.98   24.0  \n",
+       "1     17.8  396.90   9.14   21.6  \n",
+       "2     17.8  392.83   4.03   34.7  \n",
+       "3     18.7  394.63   2.94   33.4  \n",
+       "4     18.7  396.90   5.33   36.2  "
+      ]
+     },
+     "execution_count": 13,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "import numpy as np\n",
+    "from sklearn import datasets\n",
+    "\n",
+    "b = datasets.load_boston() \n",
+    "\n",
+    "bos = pd.DataFrame(b.data)\n",
+    "bos.columns = b.feature_names\n",
+    "X = bos[bos.columns]\n",
+    "bos[\"PRICE\"] = b.target\n",
+    "y = bos[\"PRICE\"]\n",
+    "\n",
+    "bos.head()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "1. Feature importance from coefficients\n",
+    "\n",
+    "- To get an idea of the importance of the features, we are going to use the\n",
+    ":class:`~sklearn.linear_model.LassoCV` estimator. The features with the\n",
+    "highest absolute `coef_` value are considered the most important.\n",
+    "- We can observe the coefficients directly without needing to scale them (or\n",
+    "scale the data) because from the description above, we know that the features\n",
+    "were already standardized.\n",
+    "- For a more complete example on the interpretations of the coefficients of\n",
+    "linear models, you may refer to\n",
+    "`sphx_glr_auto_examples_inspection_plot_linear_model_coefficient_interpretation.py`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "image/png": "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\n",
+      "text/plain": [
+       "<Figure size 432x288 with 1 Axes>"
+      ]
+     },
+     "metadata": {
+      "needs_background": "light"
+     },
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "import matplotlib.pyplot as plt\n",
+    "import numpy as np\n",
+    "from sklearn.linear_model import LassoCV\n",
+    "\n",
+    "lasso = LassoCV().fit(X, y)\n",
+    "importance = np.abs(lasso.coef_)\n",
+    "feature_names = np.array(bos.columns)[:-1]\n",
+    "\n",
+    "plt.bar(height=importance, x=feature_names)\n",
+    "plt.title(\"Feature importances via coefficients\")\n",
+    "plt.show()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "2. Selecting features based on importance\n",
+    "\n",
+    "- Now we want to select the two features which are the most important according\n",
+    "to the coefficients. The :class:`~sklearn.feature_selection.SelectFromModel`\n",
+    "is meant just for that. :class:`~sklearn.feature_selection.SelectFromModel`\n",
+    "accepts a `threshold` parameter and will select the features whose importance\n",
+    "(defined by the coefficients) are above this threshold.\n",
+    "\n",
+    "- Since we want to select only 2 features, we will set this threshold slightly\n",
+    "above the coefficient of third most important feature."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Features selected by SelectFromModel: ['RM' 'DIS']\n",
+      "Done in 0.058s\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.feature_selection import SelectFromModel\n",
+    "from time import time\n",
+    "\n",
+    "threshold = np.sort(importance)[-3] + 0.01\n",
+    "\n",
+    "tic = time()\n",
+    "sfm = SelectFromModel(lasso, threshold=threshold).fit(X, y)\n",
+    "toc = time()\n",
+    "print(f\"Features selected by SelectFromModel: {feature_names[sfm.get_support()]}\")\n",
+    "print(f\"Done in {toc - tic:.3f}s\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "3. Selecting features with Sequential Feature Selection\n",
+    "\n",
+    "- Another way of selecting features is to use\n",
+    ":class:`~sklearn.feature_selection.SequentialFeatureSelector`\n",
+    "(SFS). SFS is a greedy procedure where, at each iteration, we choose the best\n",
+    "new feature to add to our selected features based a cross-validation score.\n",
+    "That is, we start with 0 features and choose the best single feature with the\n",
+    "highest score. The procedure is repeated until we reach the desired number of\n",
+    "selected features.\n",
+    "\n",
+    "- We can also go in the reverse direction (backward SFS), *i.e.* start with all\n",
+    "the features and greedily choose features to remove one by one. We illustrate\n",
+    "both approaches here.\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Features selected by forward sequential selection: ['PTRATIO' 'LSTAT']\n",
+      "Done in 4.093s\n",
+      "Features selected by backward sequential selection: ['PTRATIO' 'LSTAT']\n",
+      "Done in 13.585s\n"
+     ]
+    }
+   ],
+   "source": [
+    "from sklearn.feature_selection import SequentialFeatureSelector\n",
+    "\n",
+    "tic_fwd = time()\n",
+    "sfs_forward = SequentialFeatureSelector(\n",
+    "    lasso, n_features_to_select=2, direction=\"forward\"\n",
+    ").fit(X, y)\n",
+    "toc_fwd = time()\n",
+    "\n",
+    "tic_bwd = time()\n",
+    "sfs_backward = SequentialFeatureSelector(\n",
+    "    lasso, n_features_to_select=2, direction=\"backward\"\n",
+    ").fit(X, y)\n",
+    "toc_bwd = time()\n",
+    "\n",
+    "print(\n",
+    "    \"Features selected by forward sequential selection: \"\n",
+    "    f\"{feature_names[sfs_forward.get_support()]}\"\n",
+    ")\n",
+    "print(f\"Done in {toc_fwd - tic_fwd:.3f}s\")\n",
+    "print(\n",
+    "    \"Features selected by backward sequential selection: \"\n",
+    "    f\"{feature_names[sfs_backward.get_support()]}\"\n",
+    ")\n",
+    "print(f\"Done in {toc_bwd - tic_bwd:.3f}s\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Interestingly, forward and backward selection have selected the same set of\n",
+    "features. In general, this isn't the case and the two methods would lead to\n",
+    "different results.\n",
+    "\n",
+    "We also note that the features selected by SFS differ from those selected by\n",
+    "feature importance: SFS selects `bmi` instead of `s1`. This does sound\n",
+    "reasonable though, since `bmi` corresponds to the third most important\n",
+    "feature according to the coefficients. It is quite remarkable considering\n",
+    "that SFS makes no use of the coefficients at all.\n",
+    "\n",
+    "To finish with, we should note that\n",
+    ":class:`~sklearn.feature_selection.SelectFromModel` is significantly faster\n",
+    "than SFS. Indeed, :class:`~sklearn.feature_selection.SelectFromModel` only\n",
+    "needs to fit a model once, while SFS needs to cross-validate many different\n",
+    "models for each of the iterations. SFS however works with any model, while\n",
+    ":class:`~sklearn.feature_selection.SelectFromModel` requires the underlying\n",
+    "estimator to expose a `coef_` attribute or a `feature_importances_`\n",
+    "attribute. The forward SFS is faster than the backward SFS because it only\n",
+    "needs to perform `n_features_to_select = 2` iterations, while the backward\n",
+    "SFS needs to perform `n_features - n_features_to_select = 8` iterations.\n",
+    "\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.5"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 4
+}
